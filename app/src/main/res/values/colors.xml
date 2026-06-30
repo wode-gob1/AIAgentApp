@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="seed">#0066FF</color>
+    <color name="dark_seed">#4D9FFF</color>
+    <color name="user_message">#0066FF</color>
+    <color name="ai_message">#F0F0F0</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="background_dark">#1A1A2E</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#2D2D3F</color>
+    <color name="on_surface_light">#1A1A2E</color>
+    <color name="on_surface_dark">#E8E8F0</color>
+    <color name="text_secondary">#888899</color>
+</resources>

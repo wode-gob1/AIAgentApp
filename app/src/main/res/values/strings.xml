@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI助手</string>
+    <string name="settings">设置</string>
+    <string name="new_chat">新建对话</string>
+    <string name="send">发送</string>
+    <string name="type_message">输入消息...</string>
+    <string name="api_url">API 地址</string>
+    <string name="api_key">API 密钥</string>
+    <string name="model_name">模型名称</string>
+    <string name="system_prompt">系统提示词</string>
+    <string name="temperature">温度参数</string>
+    <string name="save">保存</string>
+    <string name="clear_conversations">清空对话</string>
+    <string name="no_conversations">暂无对话</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="light_mode">浅色模式</string>
+    <string name="api_url_hint">例如: https://api.deepseek.com/v1</string>
+    <string name="api_key_hint">输入你的 API 密钥</string>
+    <string name="model_hint">例如: deepseek-chat</string>
+    <string name="thinking">思考中...</string>
+    <string name="error_network">网络错误，请检查连接</string>
+    <string name="error_api">API 错误，请检查配置</string>
+    <string name="error_empty">请输入消息</string>
+</resources>
