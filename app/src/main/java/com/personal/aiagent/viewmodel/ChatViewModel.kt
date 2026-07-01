@@ -10,7 +10,6 @@ import com.personal.aiagent.data.network.ApiModels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val db = (application as AIAgentApp).database
@@ -68,11 +67,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             _messages.value = emptyList()
             _streamingContent.value = ""
             _errorMessage.value = null
-            viewModelScope.launch {
-                messageDao.getMessagesByConversation(conv.id).collect { msgs ->
-                    _messages.value = msgs
-                }
-            }
         }
     }
 
@@ -115,8 +109,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             messageDao.insertMessage(userMsg)
 
             val currentMsgs = _messages.value
-            val request = ApiModels.json.encodeToString(
-                ApiModels.ChatCompletionRequest.serializer(),
+            val request = ApiModels.json.encodeToString(ApiModels.ChatCompletionRequest.serializer(),
                 ApiModels.ChatCompletionRequest(
                     model = conversation.modelName.ifBlank { "default" },
                     messages = ApiModels.messagesFromConversation(
