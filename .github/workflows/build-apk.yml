@@ -47,6 +47,7 @@ jobs:
     strategy:
       matrix:
         api-level: [34]
+        arch: [arm64-v8a]
         target: [google_apis]
     
     steps:
@@ -65,16 +66,12 @@ jobs:
         name: AIAgentApp-apk
         path: ./apk
 
-    - name: Enable KVM
-      run: |
-        echo 'KVM not needed on macOS'
-
-    - name: Setup Android Emulator
+    - name: Setup Android Emulator and run test
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: ${{ matrix.api-level }}
         target: ${{ matrix.target }}
-        arch: x86_64
+        arch: ${{ matrix.arch }}
         force-avd-creation: false
         emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
         disable-animations: true
@@ -102,9 +99,6 @@ jobs:
           echo "=== 获取当前Activity ==="
           adb shell dumpsys window | grep mCurrentFocus
           echo ""
-          echo "=== 查看日志 ==="
-          adb logcat -d | grep -i aiagent | tail -20
-          echo ""
           echo "=== 截图验证 ==="
           adb shell screencap -p /sdcard/screenshot.png
           adb pull /sdcard/screenshot.png ./screenshot.png
@@ -125,16 +119,3 @@ jobs:
         name: logcat-output
         path: logcat.txt
         if-no-files-found: warn
-
-  test-result:
-    needs: [build, test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check test result
-      run: |
-        echo "========================================"
-        echo "✅ 全部流程完成!"
-        echo "   APK已编译并上传"
-        echo "   模拟器测试已执行"
-        echo "========================================"
