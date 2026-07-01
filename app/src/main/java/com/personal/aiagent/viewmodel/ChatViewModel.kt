@@ -10,6 +10,7 @@ import com.personal.aiagent.data.network.ApiModels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val db = (application as AIAgentApp).database
@@ -17,31 +18,24 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val conversationDao = db.conversationDao()
     private val messageDao = db.messageDao()
 
-    // 对话列表
     val conversations: StateFlow<List<Conversation>> = conversationDao.getAllConversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // 当前对话
     private val _currentConversation = MutableStateFlow<Conversation?>(null)
     val currentConversation: StateFlow<Conversation?> = _currentConversation.asStateFlow()
 
-    // 当前消息列表
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
-    // 流式内容
     private val _streamingContent = MutableStateFlow("")
     val streamingContent: StateFlow<String> = _streamingContent.asStateFlow()
 
-    // 是否正在加载
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // 错误信息
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // 当前输入文本
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText.asStateFlow()
 
@@ -98,7 +92,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         val conversation = _currentConversation.value ?: run {
             createNewConversation()
-            // Wait for next call
             return
         }
 
@@ -114,7 +107,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         currentMessageStream = StringBuilder()
 
         viewModelScope.launch {
-            // Save user message
             val userMsg = Message(
                 conversationId = conversation.id,
                 role = "user",
@@ -122,7 +114,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
             messageDao.insertMessage(userMsg)
 
-            // Get messages for context
             val currentMsgs = _messages.value
             val request = ApiModels.json.encodeToString(
                 ApiModels.ChatCompletionRequest.serializer(),
@@ -156,7 +147,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             )
                             messageDao.insertMessage(aiMsg)
 
-                            // Update conversation title if first message
                             val msgCount = _messages.value.size
                             if (msgCount <= 1) {
                                 val updated = conversation.copy(
@@ -212,10 +202,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveApiConfig(apiUrl: String, apiKey: String) {
         apiService.updateConfig(apiUrl, apiKey)
-        // Also store for session persistence
-        // In a real app, you'd use DataStore here
     }
 
-    fun getApiUrl(): String = ""  // Will be loaded from DataStore
+    fun getApiUrl(): String = ""
     fun getApiKey(): String = ""
 }
