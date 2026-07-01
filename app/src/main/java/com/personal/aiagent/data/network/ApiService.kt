@@ -75,13 +75,11 @@ class ApiService {
                     try {
                         val chunk = ApiModels.json.decodeFromString<StreamChunk>(data)
                         val content = chunk.choices?.firstOrNull()?.delta?.content
-                            ?: chunk.choices?.firstOrNull()?.message?.content
                         if (content != null) {
                             fullContent.append(content)
                             onChunk(content)
                         }
                     } catch (e: Exception) {
-                        // Skip malformed chunks
                     }
                 } else if (line.isNotBlank()) {
                     try {
