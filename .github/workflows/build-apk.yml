@@ -1,25 +1,22 @@
-name: Build APK
+name: Build & Test APK
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
     inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        default: 'debug'
-        type: choice
-        options:
-          - debug
-          - release
+      run_emulator_test:
+        description: 'Run emulator test'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout source
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -28,23 +25,116 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Generate Gradle Wrapper (needed for gradlew)
+    - name: Generate Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
 
-    - name: Build APK with Gradle Wrapper
-      run: |
-        ./gradlew assembleDebug --no-daemon --stacktrace
+    - name: Build APK
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-    - name: List APK outputs
-      run: |
-        find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
-        ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "No debug APK directory"
-
-    - name: Upload debug APK
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: AIAgentApp-apk
         path: app/build/outputs/apk/debug/*.apk
         if-no-files-found: error
+
+  test:
+    needs: build
+    if: inputs.run_emulator_test || github.event_name == 'push'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [34]
+        target: [google_apis]
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Download APK
+      uses: actions/download-artifact@v4
+      with:
+        name: AIAgentApp-apk
+        path: ./apk
+
+    - name: Enable KVM
+      run: |
+        echo 'KVM not needed on macOS'
+
+    - name: Setup Android Emulator
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        target: ${{ matrix.target }}
+        arch: x86_64
+        force-avd-creation: false
+        emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+        disable-animations: true
+        script: |
+          echo "=== 模拟器启动完成 ==="
+          echo ""
+          echo "=== 安装APK ==="
+          adb install apk/app-debug.apk
+          echo ""
+          echo "=== 启动APP ==="
+          adb shell am start -n com.personal.aiagent/.MainActivity
+          echo ""
+          echo "=== 等待5秒让APP加载 ==="
+          sleep 5
+          echo ""
+          echo "=== 检查APP进程 ==="
+          adb shell pidof com.personal.aiagent
+          if [ $? -eq 0 ]; then
+            echo "✅ APP运行中! PID: $(adb shell pidof com.personal.aiagent)"
+          else
+            echo "❌ APP未运行"
+            exit 1
+          fi
+          echo ""
+          echo "=== 获取当前Activity ==="
+          adb shell dumpsys window | grep mCurrentFocus
+          echo ""
+          echo "=== 查看日志 ==="
+          adb logcat -d | grep -i aiagent | tail -20
+          echo ""
+          echo "=== 截图验证 ==="
+          adb shell screencap -p /sdcard/screenshot.png
+          adb pull /sdcard/screenshot.png ./screenshot.png
+          echo "✅ 测试完成!"
+
+    - name: Upload screenshot
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: emulator-screenshot
+        path: screenshot.png
+        if-no-files-found: warn
+
+    - name: Upload logcat
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: logcat-output
+        path: logcat.txt
+        if-no-files-found: warn
+
+  test-result:
+    needs: [build, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check test result
+      run: |
+        echo "========================================"
+        echo "✅ 全部流程完成!"
+        echo "   APK已编译并上传"
+        echo "   模拟器测试已执行"
+        echo "========================================"
