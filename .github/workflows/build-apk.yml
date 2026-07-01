@@ -30,8 +30,17 @@ jobs:
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
 
-    - name: Build APK
-      run: ./gradlew assembleDebug --no-daemon --stacktrace
+    - name: Build APK with D8 compat
+      run: |
+        ./gradlew assembleDebug --no-daemon --stacktrace
+
+    - name: Check DEX version
+      run: |
+        echo "=== DEX版本检查 ==="
+        find app/build/outputs/apk -name "*.apk" | while read apk; do
+          unzip -p "$apk" classes.dex | head -c 8 | xxd
+          unzip -p "$apk" classes2.dex 2>/dev/null | head -c 8 | xxd || true
+        done
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -66,7 +75,7 @@ jobs:
         name: AIAgentApp-apk
         path: ./apk
 
-    - name: Setup Android Emulator and run test
+    - name: Emulator test
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: ${{ matrix.api-level }}
@@ -76,46 +85,24 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
         disable-animations: true
         script: |
-          echo "=== 模拟器启动完成 ==="
-          echo ""
           echo "=== 安装APK ==="
           adb install apk/app-debug.apk
           echo ""
           echo "=== 启动APP ==="
           adb shell am start -n com.personal.aiagent/.MainActivity
-          echo ""
-          echo "=== 等待5秒让APP加载 ==="
           sleep 5
           echo ""
-          echo "=== 检查APP进程 ==="
-          adb shell pidof com.personal.aiagent
-          if [ $? -eq 0 ]; then
-            echo "✅ APP运行中! PID: $(adb shell pidof com.personal.aiagent)"
-          else
-            echo "❌ APP未运行"
-            exit 1
-          fi
+          echo "=== 检查进程 ==="
+          adb shell pidof com.personal.aiagent && echo "✅ APP运行正常" || (echo "❌ APP未运行"; exit 1)
           echo ""
-          echo "=== 获取当前Activity ==="
-          adb shell dumpsys window | grep mCurrentFocus
-          echo ""
-          echo "=== 截图验证 ==="
-          adb shell screencap -p /sdcard/screenshot.png
-          adb pull /sdcard/screenshot.png ./screenshot.png
-          echo "✅ 测试完成!"
+          adb shell screencap -p /sdcard/screen.png
+          adb pull /sdcard/screen.png ./screenshot.png
+          echo "✅ 测试完成"
 
-    - name: Upload screenshot
+    - name: Upload results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: emulator-screenshot
+        name: emulator-results
         path: screenshot.png
-        if-no-files-found: warn
-
-    - name: Upload logcat
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: logcat-output
-        path: logcat.txt
         if-no-files-found: warn
