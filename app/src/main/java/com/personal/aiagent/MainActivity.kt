@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val viewModel: ChatViewModel = viewModel()
-            val isDark by viewModel.isLoading // placeholder for theme toggle
             AIAgentTheme(darkTheme = false) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MainScreen(viewModel = viewModel)
