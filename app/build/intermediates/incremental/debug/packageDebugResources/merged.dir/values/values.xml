@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ai_message">#F0F0F0</color>
+    <color name="background_dark">#1A1A2E</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="dark_seed">#4D9FFF</color>
+    <color name="on_surface_dark">#E8E8F0</color>
+    <color name="on_surface_light">#1A1A2E</color>
+    <color name="seed">#0066FF</color>
+    <color name="surface_dark">#2D2D3F</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="text_secondary">#888899</color>
+    <color name="user_message">#0066FF</color>
+    <string name="api_key">API 密钥</string>
+    <string name="api_key_hint">输入你的 API 密钥</string>
+    <string name="api_url">API 地址</string>
+    <string name="api_url_hint">例如: https://api.deepseek.com/v1</string>
+    <string name="app_name">AI助手</string>
+    <string name="clear_conversations">清空对话</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="error_api">API 错误，请检查配置</string>
+    <string name="error_empty">请输入消息</string>
+    <string name="error_network">网络错误，请检查连接</string>
+    <string name="light_mode">浅色模式</string>
+    <string name="model_hint">例如: deepseek-chat</string>
+    <string name="model_name">模型名称</string>
+    <string name="new_chat">新建对话</string>
+    <string name="no_conversations">暂无对话</string>
+    <string name="save">保存</string>
+    <string name="send">发送</string>
+    <string name="settings">设置</string>
+    <string name="system_prompt">系统提示词</string>
+    <string name="temperature">温度参数</string>
+    <string name="thinking">思考中...</string>
+    <string name="type_message">输入消息...</string>
+    <style name="Theme.AIAgentApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/seed</item>
+    </style>
+</resources>
