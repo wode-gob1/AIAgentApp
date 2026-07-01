@@ -7,6 +7,7 @@ import com.personal.aiagent.AIAgentApp
 import com.personal.aiagent.data.model.Conversation
 import com.personal.aiagent.data.model.Message
 import com.personal.aiagent.data.network.ApiModels
+import com.personal.aiagent.data.network.ChatCompletionRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -109,8 +110,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             messageDao.insertMessage(userMsg)
 
             val currentMsgs = _messages.value
-            val request = ApiModels.json.encodeToString(ApiModels.ChatCompletionRequest.serializer(),
-                ApiModels.ChatCompletionRequest(
+            val request = ApiModels.json.encodeToString(ChatCompletionRequest.serializer(),
+                ChatCompletionRequest(
                     model = conversation.modelName.ifBlank { "default" },
                     messages = ApiModels.messagesFromConversation(
                         currentMsgs + userMsg,
@@ -167,36 +168,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateConversationConfig(
-        apiUrl: String,
-        apiKey: String,
-        model: String,
-        systemPrompt: String,
-        temperature: Float
-    ) {
+    fun updateConversationConfig(apiUrl: String, apiKey: String, model: String, systemPrompt: String, temperature: Float) {
         apiService.updateConfig(apiUrl, apiKey)
         val current = _currentConversation.value
         if (current != null) {
             viewModelScope.launch {
-                val updated = current.copy(
-                    modelName = model,
-                    systemPrompt = systemPrompt,
-                    temperature = temperature
-                )
+                val updated = current.copy(modelName = model, systemPrompt = systemPrompt, temperature = temperature)
                 conversationDao.updateConversation(updated)
                 _currentConversation.value = updated
             }
         }
     }
 
-    fun dismissError() {
-        _errorMessage.value = null
-    }
-
-    fun saveApiConfig(apiUrl: String, apiKey: String) {
-        apiService.updateConfig(apiUrl, apiKey)
-    }
-
+    fun dismissError() { _errorMessage.value = null }
+    fun saveApiConfig(apiUrl: String, apiKey: String) { apiService.updateConfig(apiUrl, apiKey) }
     fun getApiUrl(): String = ""
     fun getApiKey(): String = ""
 }
